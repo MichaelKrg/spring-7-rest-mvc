@@ -3,6 +3,8 @@ package guru.springframework.spring7restmvc.controller;
 import guru.springframework.spring7restmvc.model.CustomerDTO;
 import guru.springframework.spring7restmvc.services.CustomerService;
 import lombok.RequiredArgsConstructor;
+
+import org.aspectj.weaver.ast.Not;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,29 +26,31 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @PatchMapping(CUSTOMER_PATH_ID)
-    public ResponseEntity patchCustomerById(@PathVariable("customerId") UUID customerId,
+    public ResponseEntity<HttpStatus> patchCustomerById(@PathVariable("customerId") UUID customerId,
                                                 @RequestBody CustomerDTO customer){
 
-        customerService.patchCustomerById(customerId, customer);
+        customerService.patchCustomerById(customerId, customer).orElseThrow(NotFoundException::new);
 
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping(CUSTOMER_PATH_ID)
-    public ResponseEntity deleteCustomerById(@PathVariable("customerId") UUID customerId){
+    public ResponseEntity<HttpStatus> deleteCustomerById(@PathVariable("customerId") UUID customerId){
 
-        customerService.deleteCustomerById(customerId);
+        if(!customerService.deleteCustomerById(customerId)){
+            throw new NotFoundException();
+        }
 
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping(CUSTOMER_PATH_ID)
-    public ResponseEntity updateCustomerByID(@PathVariable("customerId") UUID customerId,
+    public ResponseEntity<HttpStatus> updateCustomerByID(@PathVariable("customerId") UUID customerId,
                                              @RequestBody CustomerDTO customer){
 
-        customerService.updateCustomerById(customerId, customer);
+        customerService.updateCustomerById(customerId, customer).orElseThrow(NotFoundException::new);
 
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT);
     }
 
     @PostMapping(CUSTOMER_PATH)

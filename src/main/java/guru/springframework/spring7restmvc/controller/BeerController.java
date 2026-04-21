@@ -26,38 +26,39 @@ public class BeerController {
     private final BeerService beerService;
 
     @PatchMapping(BEER_PATH_ID)
-    public ResponseEntity updateBeerPatchById(@PathVariable("beerId")UUID beerId, @RequestBody BeerDTO beer){
+    public ResponseEntity<HttpStatus> updateBeerPatchById(@PathVariable("beerId")UUID beerId, @RequestBody BeerDTO beer){
 
-        beerService.patchBeerById(beerId, beer);
+        beerService.patchBeerById(beerId, beer).orElseThrow(NotFoundException::new);;
 
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping(BEER_PATH_ID)
-    public ResponseEntity deleteById(@PathVariable("beerId") UUID beerId){
+    public ResponseEntity<HttpStatus> deleteById(@PathVariable("beerId") UUID beerId){
 
-        beerService.deleteById(beerId);
-
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        if(! beerService.deleteById(beerId)){
+            throw new NotFoundException();
+        }
+        return new ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping(BEER_PATH_ID)
-    public ResponseEntity updateById(@PathVariable("beerId")UUID beerId, @RequestBody BeerDTO beer){
+    public ResponseEntity<HttpStatus> updateById(@PathVariable("beerId")UUID beerId, @RequestBody BeerDTO beer){
 
-        beerService.updateBeerById(beerId, beer);
+        BeerDTO updatedBeer = beerService.updateBeerById(beerId, beer).orElseThrow(NotFoundException::new);
 
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT);
     }
 
     @PostMapping(BEER_PATH)
-    public ResponseEntity handlePost(@RequestBody BeerDTO beer){
+    public ResponseEntity<HttpStatus> handlePost(@RequestBody BeerDTO beer){
 
         BeerDTO savedBeer = beerService.saveNewBeer(beer);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", BEER_PATH + "/" + savedBeer.getId().toString());
 
-        return new ResponseEntity(headers, HttpStatus.CREATED);
+        return new ResponseEntity<HttpStatus>(headers, HttpStatus.CREATED);
     }
 
     @GetMapping(value = BEER_PATH)
