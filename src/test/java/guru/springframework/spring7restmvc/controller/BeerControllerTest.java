@@ -14,6 +14,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
@@ -63,7 +65,7 @@ class BeerControllerTest {
         beerMap.put("beerName", "New Name");
 
         given(beerService.patchBeerById(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(beer));
-        
+
         mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -104,6 +106,23 @@ class BeerControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(beerService).updateBeerById(any(UUID.class), any(BeerDTO.class));
+    }
+
+    @Test
+    void testCreateNewBeerNullName() throws Exception {
+        BeerDTO beer = BeerDTO.builder().build();
+
+        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers().get(1));
+
+        MvcResult result = mockMvc.perform(post(BeerController.BEER_PATH)
+                .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beer)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is(2)))
+                .andReturn();
+        String responseString = result.getResponse().getContentAsString();
+        //System.out.println(responseString);
     }
 
     @Test
