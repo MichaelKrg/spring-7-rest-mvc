@@ -1,6 +1,7 @@
 package guru.springframework.spring7restmvc.controller;
 
 import guru.springframework.spring7restmvc.model.BeerDTO;
+import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.services.BeerService;
 import guru.springframework.spring7restmvc.services.BeerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import tools.jackson.databind.ObjectMapper;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -94,6 +96,26 @@ class BeerControllerTest {
     }
 
     @Test
+    void testUpdateBeerFailValidations() throws Exception {
+        BeerDTO beer = beerServiceImpl.listBeers().get(0);
+        BeerDTO newBeer = BeerDTO.builder().build();
+
+        given(beerService.updateBeerById(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(beer));
+        
+        // we expect 6 errors because of
+        // @NotNull and @NotBlank validations on beerName and upc (2 errors each)
+        // @NotNull on beerStyle and price (1 error each)
+        MvcResult result = mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newBeer)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is(6)))
+                .andReturn();
+        String responseString = result.getResponse().getContentAsString();
+    }
+
+    @Test
     void testUpdateBeer() throws Exception {
         BeerDTO beer = beerServiceImpl.listBeers().get(0);
 
@@ -109,19 +131,74 @@ class BeerControllerTest {
     }
 
     @Test
-    void testCreateNewBeerNullName() throws Exception {
+    void testCreateNewBeerFailValidations() throws Exception {
         BeerDTO beer = BeerDTO.builder().build();
 
         given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers().get(1));
 
+        // we expect 6 errors because of
+        // @NotNull and @NotBlank validations on beerName and upc (2 errors each)
+        // @NotNull on beerStyle and price (1 error each)
         MvcResult result = mockMvc.perform(post(BeerController.BEER_PATH)
                 .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(beer)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.length()", is(2)))
+                .andExpect(jsonPath("$.length()", is(6)))
                 .andReturn();
         String responseString = result.getResponse().getContentAsString();
+
+        beer.setBeerName("not null");
+        beer.setBeerStyle(BeerStyle.PALE_ALE);
+        beer.setUpc("not null");
+        // price has multiple validations, test each one separately
+        // 1) @Digits(integer = 4, fraction = 2) validation --> too many digits in fraction
+        beer.setPrice(BigDecimal.valueOf(1.2345)); // too many digits in fraction
+        result = mockMvc.perform(post(BeerController.BEER_PATH)
+                .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beer)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is(1)))
+                .andReturn();
+
+        responseString = result.getResponse().getContentAsString();
+
+        // 2) @Digits(integer = 4, fraction = 2) validation --> too many digits (fraction is OK)
+        beer.setPrice(BigDecimal.valueOf(10000.50));
+        result = mockMvc.perform(post(BeerController.BEER_PATH)
+                .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beer)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is(1)))
+                .andReturn();
+
+        responseString = result.getResponse().getContentAsString();
+
+        // 3) @Positive validation --> negative value
+        beer.setPrice(BigDecimal.valueOf(-10.50));
+        result = mockMvc.perform(post(BeerController.BEER_PATH)
+                .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beer)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is(1)))
+                .andReturn();
+
+        responseString = result.getResponse().getContentAsString();
+
+        // 4) @NotNull validation --> null value
+        beer.setPrice(null); // Cannot be null
+        result = mockMvc.perform(post(BeerController.BEER_PATH)
+                .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beer)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is(1)))
+                .andReturn();
+
+        responseString = result.getResponse().getContentAsString();
         //System.out.println(responseString);
     }
 

@@ -44,7 +44,7 @@ public class BeerController {
     }
 
     @PutMapping(BEER_PATH_ID)
-    public ResponseEntity<HttpStatus> updateById(@PathVariable("beerId")UUID beerId, @RequestBody BeerDTO beer){
+    public ResponseEntity<HttpStatus> updateById(@PathVariable("beerId")UUID beerId, @Validated @RequestBody BeerDTO beer){
 
         BeerDTO updatedBeer = beerService.updateBeerById(beerId, beer).orElseThrow(NotFoundException::new);
 
@@ -52,7 +52,7 @@ public class BeerController {
     }
 
     @PostMapping(BEER_PATH)
-    public ResponseEntity<HttpStatus> handlePost(@Validated@RequestBody BeerDTO beer){
+    public ResponseEntity<HttpStatus> handlePost(@Validated @RequestBody BeerDTO beer){
 
         BeerDTO savedBeer = beerService.saveNewBeer(beer);
 
