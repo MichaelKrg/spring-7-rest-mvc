@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,9 +31,10 @@ class BeerRepositoryTest {
 
     @Test
     void testgetBeerListByName() {
-        List<Beer> beers =  beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%");
+        // we give null for pageable, which defaults to loading up to 1000 records, which is more than we have in our test data
+        Page<Beer> beers =  beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%", null);
 
-        assertThat(beers.size()).isEqualTo(336);
+        assertThat(beers.getContent().size()).isEqualTo(336);
      }
     @Test
     void testSaveBeerNameTooLong() {
