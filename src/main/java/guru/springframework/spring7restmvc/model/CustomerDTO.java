@@ -21,6 +21,9 @@ public class CustomerDTO {
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty("email")
+    private String email;
+
     @JsonProperty("version")
     private Integer version;
 

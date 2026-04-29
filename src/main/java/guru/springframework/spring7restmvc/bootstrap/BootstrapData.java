@@ -2,16 +2,25 @@ package guru.springframework.spring7restmvc.bootstrap;
 
 import guru.springframework.spring7restmvc.entities.Beer;
 import guru.springframework.spring7restmvc.entities.Customer;
+import guru.springframework.spring7restmvc.model.BeerCSVRecord;
 import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
 import guru.springframework.spring7restmvc.repositories.CustomerRepository;
+import guru.springframework.spring7restmvc.services.BeerCsvService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ResourceUtils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by jt, Spring Framework Guru.
@@ -21,13 +30,48 @@ import java.util.Arrays;
 public class BootstrapData implements CommandLineRunner {
     private final BeerRepository beerRepository;
     private final CustomerRepository customerRepository;
+    private final BeerCsvService beerCsvService;
 
+    @Transactional
     @Override
     public void run(String... args) throws Exception {
         loadBeerData();
+        loadCsvData();
         loadCustomerData();
     }
 
+    private void loadCsvData() throws FileNotFoundException{
+        if(beerRepository.count() > 10){
+            return;
+        }
+        File file = ResourceUtils.getFile("classpath:csvdata/beers.csv");
+
+        List<BeerCSVRecord> recs = beerCsvService.readCSVRecords(file);
+        recs.forEach(record -> {
+            // Convert BeerStyle first since it's an enum and needs to be converted from String
+            BeerStyle beerStyle = switch (record.getStyle()) {
+                    case "American Pale Lager" -> BeerStyle.LAGER;
+                    case "American Pale Ale (APA)", "American Black Ale", "Belgian Dark Ale", "American Blonde Ale" ->
+                            BeerStyle.ALE;
+                    case "American IPA", "American Double / Imperial IPA", "Belgian IPA" -> BeerStyle.IPA;
+                    case "American Porter" -> BeerStyle.PORTER;
+                    case "Oatmeal Stout", "American Stout" -> BeerStyle.STOUT;
+                    case "Saison / Farmhouse Ale" -> BeerStyle.SAISON;
+                    case "Fruit / Vegetable Beer", "Winter Warmer", "Berliner Weissbier" -> BeerStyle.WHEAT;
+                    case "English Pale Ale" -> BeerStyle.PALE_ALE;
+                    default -> BeerStyle.PILSNER;
+                };
+            // convert BeerCsvRecord to Beer entity and save to repository
+            Beer beer = Beer.builder()
+                    .beerName(StringUtils.abbreviate(record.getBeer(), 50)) // beerName is max 50 chars
+                    .beerStyle(beerStyle)
+                    .upc(record.getRow().toString())
+                    .price(BigDecimal.TEN) // default price since CSV doesn't have price info
+                    .quantityOnHand(record.getCount())
+                    .build();
+            beerRepository.save(beer);
+        });
+    }
     private void loadBeerData() {
         if (beerRepository.count() == 0){
             Beer beer1 = Beer.builder()
