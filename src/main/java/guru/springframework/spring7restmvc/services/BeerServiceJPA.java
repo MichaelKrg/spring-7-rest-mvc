@@ -118,6 +118,7 @@ public class BeerServiceJPA implements BeerService {
             foundBeer.setUpc(beer.getUpc());
             foundBeer.setPrice(beer.getPrice());
             foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
+            foundBeer.setVersion(beer.getVersion());
             beerRepository.save(foundBeer);
             atomicReference.set(Optional.of(beerMapper.beerToBeerDto(foundBeer)));
         }, () -> {
