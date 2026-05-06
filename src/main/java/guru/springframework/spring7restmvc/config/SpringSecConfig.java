@@ -30,12 +30,11 @@ public class SpringSecConfig {
     }
     @Bean
     public UserDetailsService userDetailsService() {
-    UserDetails user = User.withDefaultPasswordEncoder()
-        .username("user1")
-        .password("password1")
-        .roles("USER")
-        .build();
-    return new InMemoryUserDetailsManager(user);
-}
-
+        UserDetails user = User.withDefaultPasswordEncoder()
+            .username("user1")
+            .password("password1")
+            .roles("USER")
+            .build();
+        return new InMemoryUserDetailsManager(user);
+    }
 }
