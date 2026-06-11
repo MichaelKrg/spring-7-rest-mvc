@@ -3,6 +3,7 @@ package guru.springframework.spring7restmvc.controller;
 import guru.springframework.spring7restmvc.model.CustomerDTO;
 import guru.springframework.spring7restmvc.services.CustomerService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.aspectj.weaver.ast.Not;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +18,7 @@ import java.util.UUID;
  * Created by jt, Spring Framework Guru.
  */
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 public class CustomerController {

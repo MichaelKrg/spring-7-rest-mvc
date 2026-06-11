@@ -14,9 +14,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import({BootstrapData.class, BeerCsvServiceImpl.class})
 class BeerRepositoryTest {
 
+    @MockitoBean
+    CacheManager cacheManager;
+  
     @Autowired
     BeerRepository beerRepository;
 
@@ -57,7 +62,7 @@ class BeerRepositoryTest {
                         .upc("not null")
                         .price(new java.math.BigDecimal("9.99"))
                 .build());
-       beerRepository.flush();
+        beerRepository.flush();
 
         assertThat(savedBeer).isNotNull();
         assertThat(savedBeer.getId()).isNotNull();
