@@ -1,9 +1,12 @@
 package guru.springframework.spring7restmvc.bootstrap;
 
 import guru.springframework.spring7restmvc.entities.Beer;
+import guru.springframework.spring7restmvc.entities.BeerOrder;
+import guru.springframework.spring7restmvc.entities.BeerOrderLine;
 import guru.springframework.spring7restmvc.entities.Customer;
 import guru.springframework.spring7restmvc.model.BeerCSVRecord;
 import guru.springframework.spring7restmvc.model.BeerStyle;
+import guru.springframework.spring7restmvc.repositories.BeerOrderRepository;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
 import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import guru.springframework.spring7restmvc.services.BeerCsvService;
@@ -12,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 
@@ -20,7 +24,9 @@ import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by jt, Spring Framework Guru.
@@ -30,6 +36,7 @@ import java.util.List;
 public class BootstrapData implements CommandLineRunner {
     private final BeerRepository beerRepository;
     private final CustomerRepository customerRepository;
+    private final BeerOrderRepository beerOrderRepository;
     private final BeerCsvService beerCsvService;
 
     @Transactional
@@ -38,6 +45,7 @@ public class BootstrapData implements CommandLineRunner {
         loadBeerData();
         loadCsvData();
         loadCustomerData();
+        loadOrderData();
     }
 
     private void loadCsvData() throws FileNotFoundException{
@@ -139,6 +147,47 @@ public class BootstrapData implements CommandLineRunner {
         }
 
     }
+
+    private void loadOrderData() {
+        // do that freshly only if still empty
+        if(beerOrderRepository.count() == 0) {
+            // we want to setup one order each for two customers.
+            // Each order contains a few OrderLines each with Beer in it
+            // So we
+            // - take customers form customerRepository
+            // - take beers from beerRepository
+            // - create OrderLines adding beers
+            // - create Orders adding OrderLines
+            // - save the Orders in the orderRepository (with cascade save option)
+            List<Customer> allCustomers = customerRepository.findAll();
+            List<Beer> allBeers = beerRepository.findAll();
+
+            Set<BeerOrderLine> orderLines1 = new HashSet<BeerOrderLine>();
+            Set<BeerOrderLine> orderLines2 = new HashSet<BeerOrderLine>();
+
+            orderLines1.add(BeerOrderLine.builder().beer(allBeers.get(0))
+                            .orderQuantity(2).build());
+            orderLines1.add(BeerOrderLine.builder().beer(allBeers.get(1))
+                            .orderQuantity(1).build());
+
+            orderLines2.add(BeerOrderLine.builder().beer(allBeers.get(2))
+                            .orderQuantity(3).build());
+            orderLines2.add(BeerOrderLine.builder().beer(allBeers.get(1))
+                            .orderQuantity(10).build());
+
+            BeerOrder beerOrder1 = BeerOrder.builder()
+                                    .customer(allCustomers.get(0))
+                                    .beerOrderLines(orderLines1)
+                                    .build();
+            BeerOrder beerOrder2 = BeerOrder.builder()
+                                    .customer(allCustomers.get(1))
+                                    .beerOrderLines(orderLines2)
+                                    .build();
+            beerOrderRepository.saveAll(Arrays.asList(beerOrder1, beerOrder2));
+        }
+        //List<BeerOrder> allOrders = beerOrderRepository.findAll();
+    }
+
 
 
 }

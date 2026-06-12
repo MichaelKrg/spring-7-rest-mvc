@@ -1,6 +1,7 @@
 package guru.springframework.spring7restmvc.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.*;
 import org.hibernate.type.SqlTypes;
@@ -35,6 +36,7 @@ public class BeerOrderShipment {
     @UpdateTimestamp
     private Timestamp lastModifiedDate;
 
+    @NotBlank
     private String trackingNumber;
     
     @OneToOne

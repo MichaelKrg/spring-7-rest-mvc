@@ -14,6 +14,7 @@ import jakarta.annotation.Generated;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
@@ -43,8 +44,32 @@ public class BeerOrder {
         // builder calls this constructor, which unlike a generated constructor with AllArgsConstructor
         // calls setCustomer so that the backward reference is properly set up
         this.setCustomer(customer);
-        this.beerOrderLines = beerOrderLines;
+        this.setBeerOrderLines(beerOrderLines);
         this.setBeerOrderShipment(beerOrderShipment);
+    }
+
+    // Helper methods for the relations to ensure that
+    // the backward relation is set correctly
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+        if (!customer.getBeerOrders().contains(this)) {
+            customer.getBeerOrders().add(this);
+        }
+    }
+
+    public void setBeerOrderShipment(BeerOrderShipment beerOrderShipment) {
+        this.beerOrderShipment = beerOrderShipment;
+        if (beerOrderShipment != null && beerOrderShipment.getBeerOrder() != this) {
+            beerOrderShipment.setBeerOrder(this);
+        }
+    }
+
+    public void setBeerOrderLines(Set<BeerOrderLine> orderLines) {
+        if(orderLines != null) {
+            // make sure backward mapping is correctly set
+            orderLines.forEach(orderLine -> orderLine.setBeerOrder(this));
+        }
+        this.beerOrderLines = orderLines;
     }
 
     @Id
@@ -73,23 +98,13 @@ public class BeerOrder {
     @ManyToOne
     private Customer customer;
 
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-        if (!customer.getBeerOrders().contains(this)) {
-            customer.getBeerOrders().add(this);
-        }
-    }
-
-    public void setBeerOrderShipment(BeerOrderShipment beerOrderShipment) {
-        this.beerOrderShipment = beerOrderShipment;
-        if (beerOrderShipment.getBeerOrder() != this) {
-            beerOrderShipment.setBeerOrder(this);
-        }
-    }
-
-    @OneToMany(mappedBy = "beerOrder")
+    @OneToMany(mappedBy = "beerOrder",
+            cascade= CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
     private Set<BeerOrderLine> beerOrderLines;
 
-    @OneToOne(cascade= CascadeType.PERSIST)
+    @OneToOne(mappedBy = "beerOrder",
+            cascade= CascadeType.PERSIST)
     private BeerOrderShipment beerOrderShipment;
 }

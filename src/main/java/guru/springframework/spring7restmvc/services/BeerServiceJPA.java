@@ -80,7 +80,11 @@ public class BeerServiceJPA implements BeerService {
         //         .collect(Collectors.toList());
     }
 
-    public PageRequest buildPageRequest(Integer pageNumber, Integer pageSize){
+    public static PageRequest buildPageRequest(Integer pageNumber, Integer pageSize){
+        return buildPageRequest(pageNumber, pageSize, "beerName");
+    }
+
+    public static PageRequest buildPageRequest(Integer pageNumber, Integer pageSize, String sortCriteria){
         int queryPageNumber = -1;
         int queryPageSize = -1;
 
@@ -102,7 +106,10 @@ public class BeerServiceJPA implements BeerService {
                 queryPageSize = pageSize;
             }
         }
-        Sort sort = Sort.by(Sort.Order.asc("beerName"));
+        Sort sort = null;
+        if(sortCriteria != null && sortCriteria.length() > 0) {
+            sort = Sort.by(Sort.Order.asc(sortCriteria));
+        }
         return PageRequest.of(queryPageNumber, queryPageSize, sort);
     }
 

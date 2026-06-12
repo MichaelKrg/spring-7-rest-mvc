@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Version;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -58,6 +59,7 @@ public class BeerOrderLine {
     private BeerOrder beerOrder;
 
     @Builder.Default
+    @Min(value = 1, message = "Quantity ordered must be more than 0")
     private Integer orderQuantity = 0;
     
     @Builder.Default
