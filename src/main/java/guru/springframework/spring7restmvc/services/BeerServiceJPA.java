@@ -5,16 +5,23 @@ import guru.springframework.spring7restmvc.mappers.BeerMapper;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerStyle;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
+import guru.springframework.spring7restmvc.events.BeerCreatedEvent;
+import guru.springframework.spring7restmvc.events.BeerDeletedEvent;
+import guru.springframework.spring7restmvc.events.BeerUpdatedEvent;
+import guru.springframework.spring7restmvc.events.BeerPatchedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -36,6 +43,7 @@ public class BeerServiceJPA implements BeerService {
     private final BeerRepository beerRepository;
     private final BeerMapper beerMapper;
     private final CacheManager cacheManager;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int DEFAULT_PAGE_SIZE = 25;
@@ -120,7 +128,13 @@ public class BeerServiceJPA implements BeerService {
     @Override
     public BeerDTO saveNewBeer(BeerDTO beer) {
         Optional.ofNullable(cacheManager.getCache("beerListCache")).ifPresent(cache -> cache.clear());
-        return beerMapper.beerToBeerDto(beerRepository.save(beerMapper.beerDtoToBeer(beer)));
+
+        Beer savedBeer = beerRepository.save(beerMapper.beerDtoToBeer(beer));
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        applicationEventPublisher.publishEvent(new BeerCreatedEvent(savedBeer, auth));
+
+        return beerMapper.beerToBeerDto(savedBeer);
     }
 
     @Override
@@ -134,7 +148,11 @@ public class BeerServiceJPA implements BeerService {
             foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
             foundBeer.setVersion(beer.getVersion());
             clearCache(beerId);
-            beerRepository.save(foundBeer);
+            Beer savedBeer = beerRepository.save(foundBeer);
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            applicationEventPublisher.publishEvent(new BeerUpdatedEvent(savedBeer, auth));
+
             atomicReference.set(Optional.of(beerMapper.beerToBeerDto(foundBeer)));
         }, () -> {
             atomicReference.set(Optional.empty());
@@ -148,6 +166,11 @@ public class BeerServiceJPA implements BeerService {
 
         if(beerRepository.existsById(beerId)){
             beerRepository.deleteById(beerId);
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            applicationEventPublisher.publishEvent(new BeerDeletedEvent(
+                                                    Beer.builder().id(beerId).build(), auth));
+
             return true;
         }
         return false;
@@ -183,7 +206,12 @@ public class BeerServiceJPA implements BeerService {
             if (StringUtils.hasText(beer.getUpc())) {
                 existing.setUpc(beer.getUpc());
             }
-            result = Optional.of(beerMapper.beerToBeerDto(beerRepository.save(existing)));
+
+            Beer savedBeer = beerRepository.save(existing);
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            applicationEventPublisher.publishEvent(new BeerPatchedEvent(savedBeer, auth));
+
+            result = Optional.of(beerMapper.beerToBeerDto(savedBeer));
         }
 
         return result;

@@ -88,6 +88,7 @@ public class CustomerServiceJPA implements CustomerService {
     public Optional<CustomerDTO> patchCustomerById(UUID customerId, CustomerDTO customer) {
         AtomicReference<Optional<CustomerDTO>> atomicReference = new AtomicReference<>();
         customerRepository.findById(customerId).ifPresentOrElse(foundCustomer -> {
+            clearCache(customerId);
             if (customer.getName() != null) {
                 foundCustomer.setName(customer.getName());
             }
