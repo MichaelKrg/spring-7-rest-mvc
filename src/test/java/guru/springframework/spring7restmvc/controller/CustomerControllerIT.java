@@ -3,6 +3,7 @@ package guru.springframework.spring7restmvc.controller;
 import guru.springframework.spring7restmvc.entities.Customer;
 import guru.springframework.spring7restmvc.mappers.CustomerMapper;
 import guru.springframework.spring7restmvc.model.CustomerDTO;
+import guru.springframework.spring7restmvc.repositories.BeerOrderRepository;
 import guru.springframework.spring7restmvc.repositories.CustomerRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,8 @@ class CustomerControllerIT {
 
     @Autowired
     CustomerRepository customerRepository;
+    @Autowired
+    BeerOrderRepository beerOrderRepository;
 
     @Autowired
     CustomerController customerController;
@@ -104,6 +107,7 @@ class CustomerControllerIT {
     @Transactional
     @Test
     void testListAllEmptyList() {
+        beerOrderRepository.deleteAll(); // avoid referential integrity issues
         customerRepository.deleteAll();
         List<CustomerDTO> dtos = customerController.listAllCustomers();
 

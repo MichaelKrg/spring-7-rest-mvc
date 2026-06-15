@@ -9,4 +9,5 @@ import java.util.UUID;
  * Created by jt, Spring Framework Guru.
  */
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
+    boolean existsById(UUID id);
 }

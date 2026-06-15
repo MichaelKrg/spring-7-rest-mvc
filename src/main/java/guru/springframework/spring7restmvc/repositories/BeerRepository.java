@@ -8,11 +8,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
+import java.util.List;
+
 
 /**
  * Created by jt, Spring Framework Guru.
  */
 public interface BeerRepository extends JpaRepository<Beer, UUID> {
+    boolean existsById(UUID id);
     Page<Beer> findAllByBeerNameIsLikeIgnoreCase(String beerName, Pageable pageable);
     Page<Beer> findAllByBeerStyle(BeerStyle beerStyle, Pageable pageable);
     Page<Beer> findAllByBeerNameIsLikeIgnoreCaseAndBeerStyle(String beerName, BeerStyle beerStyle, Pageable pageable);

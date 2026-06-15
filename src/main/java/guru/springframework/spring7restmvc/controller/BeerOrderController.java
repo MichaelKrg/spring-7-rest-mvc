@@ -10,9 +10,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerOrderCreateDTO;
 import guru.springframework.spring7restmvc.model.BeerOrderDTO;
+import guru.springframework.spring7restmvc.model.BeerOrderUpdateDTO;
 import guru.springframework.spring7restmvc.model.CustomerDTO;
 import guru.springframework.spring7restmvc.services.BeerOrderService;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +52,7 @@ public class BeerOrderController {
         return beerOrderService.getBeerOrderById(orderId).orElseThrow(NotFoundException::new);
     }
 
-    /*@PostMapping(ORDER_PATH)
+    @PostMapping(ORDER_PATH)
     public ResponseEntity<HttpStatus> createBeerOrder(@Validated @RequestBody BeerOrderCreateDTO beerOrder){
 
         BeerOrderDTO savedOrder = beerOrderService.saveNewBeerOrder(beerOrder);
@@ -58,6 +61,21 @@ public class BeerOrderController {
         headers.add("Location", ORDER_PATH + "/" + savedOrder.getId().toString());
 
         return new ResponseEntity<HttpStatus>(headers, HttpStatus.CREATED);
-    }*/
+    }
 
+    @PutMapping(ORDER_PATH_ID)
+    public ResponseEntity<HttpStatus> updateBeerOrder(@PathVariable("orderId")UUID orderId, @Validated @RequestBody BeerOrderUpdateDTO beerOrder){
+
+        BeerOrderDTO savedOrder = beerOrderService.updateBeerOrder(orderId, beerOrder);
+        return new ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT);
+    }
+
+    @DeleteMapping(ORDER_PATH_ID)
+    public ResponseEntity<HttpStatus> deleteById(@PathVariable("orderId") UUID orderId){
+
+        if(! beerOrderService.deleteById(orderId)){
+            throw new NotFoundException();
+        }
+        return new ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT);
+    }
 }

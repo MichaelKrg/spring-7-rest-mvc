@@ -2,6 +2,7 @@ package guru.springframework.spring7restmvc.controller;
 
 import guru.springframework.spring7restmvc.model.BeerDTO;
 import guru.springframework.spring7restmvc.model.BeerStyle;
+import guru.springframework.spring7restmvc.repositories.BeerOrderRepository;
 import guru.springframework.spring7restmvc.repositories.BeerRepository;
 import lombok.val;
 import tools.jackson.databind.ObjectMapper;
@@ -64,6 +65,8 @@ class BeerControllerIT {
 
     @Autowired
     BeerRepository beerRepository;
+    @Autowired
+    BeerOrderRepository beerOrderRepository;
 
     @Autowired
     BeerMapper beerMapper;
@@ -362,6 +365,9 @@ class BeerControllerIT {
     @Transactional
     @Test
     void testEmptyList() {
+        // to avoid referential integrity problems we have to
+        // first delete beerOrder before deleting all customers
+        beerOrderRepository.deleteAll();
         beerRepository.deleteAll();
         Page<BeerDTO> dtos = beerController.listBeers(null, null, false, 1, 25);
 
