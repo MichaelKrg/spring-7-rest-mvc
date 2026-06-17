@@ -33,6 +33,9 @@ public class BeerOrderLineDTO {
     @JsonProperty("quantityAllocated")
     private Integer quantityAllocated;
 
+    @JsonProperty("status")
+    private BeerOrderLineStatus status;
+
     // relation attributes
     private BeerDTO beer;
 }

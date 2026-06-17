@@ -1,5 +1,6 @@
 package guru.springframework.spring7restmvc.model;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Set;
 import java.util.UUID;
@@ -39,6 +40,9 @@ public class BeerOrderDTO {
 
     @JsonProperty("customerRef")
     private String customerRef;
+
+    @JsonProperty("paymentAmount")
+    private BigDecimal paymentAmount;
 
     // relation attributes
     private CustomerDTO customer;

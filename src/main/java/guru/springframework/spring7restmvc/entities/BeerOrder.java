@@ -1,5 +1,6 @@
 package guru.springframework.spring7restmvc.entities;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Set;
 import java.util.UUID;
@@ -32,13 +33,17 @@ import lombok.Setter;
 @Builder
 public class BeerOrder {
 
-    public BeerOrder(UUID id, Long version, Timestamp createdDate, Timestamp lastModifiedDate, String customerRef,
-                     Customer customer, Set<BeerOrderLine> beerOrderLines, BeerOrderShipment beerOrderShipment) {
+    public BeerOrder(UUID id, Long version, Timestamp createdDate, 
+                     Timestamp lastModifiedDate, String customerRef,
+                     BigDecimal paymentAmount, Customer customer,
+                     Set<BeerOrderLine> beerOrderLines,
+                     BeerOrderShipment beerOrderShipment) {
         this.id = id;
         this.version = version;
         this.createdDate = createdDate;
         this.lastModifiedDate = lastModifiedDate;
         this.customerRef = customerRef;
+        this.paymentAmount = paymentAmount;
         // builder calls this constructor, which unlike a generated constructor with AllArgsConstructor
         // calls setCustomer so that the backward reference is properly set up
         this.setCustomer(customer);
@@ -92,6 +97,8 @@ public class BeerOrder {
     }
 
     private String customerRef;
+    private BigDecimal paymentAmount;
+
 
     @ManyToOne
     private Customer customer;

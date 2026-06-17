@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
+import guru.springframework.spring7restmvc.model.BeerOrderLineStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -64,4 +65,8 @@ public class BeerOrderLine {
     
     @Builder.Default
     private Integer quantityAllocated = 0;
+
+    @Builder.Default
+    private BeerOrderLineStatus status = BeerOrderLineStatus.NEW;
+
 }
