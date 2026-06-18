@@ -27,13 +27,12 @@ public class DrinkPreparedListener {
         // - load the corresponding beerOrderLine from the repository (by id)
         // - update the status to COMPLETE and save it again
         beerOrderLineRepository.findById(event.getBeerOrderLine().getId())
-            .ifPresentOrElse(orderLine -> {
-                orderLine.setStatus(BeerOrderLineStatus.COMPLETE);
-                beerOrderLineRepository.save(orderLine);
-                log.debug("updated status to \"COMPLETE\" for beer order line " + orderLine.getId().toString());
-            },{
+                .ifPresentOrElse(orderLine -> {
+                    orderLine.setStatus(BeerOrderLineStatus.COMPLETE);
+                    beerOrderLineRepository.save(orderLine);
+                    log.debug("updated status to \"COMPLETE\" for beer order line " + orderLine.getId().toString());
+                },
                 () -> log.error("beer order line " + event.getBeerOrderLine().getId() + " not found")
-            }
-        );
+            );
     }
 }
