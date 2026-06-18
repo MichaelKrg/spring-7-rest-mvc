@@ -2,7 +2,7 @@ package guru.springframework.spring7restmvc.mappers;
 
 import guru.springframework.spring7restmvc.entities.Beer;
 import guru.springframework.spring7restmvc.entities.BeerAudit;
-import guru.springframework.spring7restmvc.model.BeerDTO;
+import guru.springframework.spring6restmvcapi.model.BeerDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

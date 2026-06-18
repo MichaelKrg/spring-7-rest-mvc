@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,12 +24,13 @@ import guru.springframework.spring7restmvc.entities.BeerOrderShipment;
 import guru.springframework.spring7restmvc.entities.Customer;
 import guru.springframework.spring7restmvc.events.BeerDeletedEvent;
 import guru.springframework.spring7restmvc.mappers.BeerOrderMapper;
-import guru.springframework.spring7restmvc.model.BeerOrderCreateDTO;
-import guru.springframework.spring7restmvc.model.BeerOrderDTO;
-import guru.springframework.spring7restmvc.model.BeerOrderLineUpdateDTO;
-import guru.springframework.spring7restmvc.model.BeerOrderShipmentDTO;
-import guru.springframework.spring7restmvc.model.BeerOrderShipmentUpdateDTO;
-import guru.springframework.spring7restmvc.model.BeerOrderUpdateDTO;
+import guru.springframework.spring6restmvcapi.events.OrderPlacedEvent;
+import guru.springframework.spring6restmvcapi.model.BeerOrderCreateDTO;
+import guru.springframework.spring6restmvcapi.model.BeerOrderDTO;
+import guru.springframework.spring6restmvcapi.model.BeerOrderLineUpdateDTO;
+import guru.springframework.spring6restmvcapi.model.BeerOrderShipmentDTO;
+import guru.springframework.spring6restmvcapi.model.BeerOrderShipmentUpdateDTO;
+import guru.springframework.spring6restmvcapi.model.BeerOrderUpdateDTO;
 import guru.springframework.spring7restmvc.repositories.BeerOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +45,7 @@ public class BeerOrderServiceJPA implements BeerOrderService {
     private final CustomerRepository customerRepository;
     private final BeerOrderRepository beerOrderRepository;
     private final BeerOrderMapper beerOrderMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     public Optional<BeerOrderDTO> getBeerOrderById(UUID id) {
@@ -106,6 +109,8 @@ public class BeerOrderServiceJPA implements BeerOrderService {
         if(!updateBeerOrder.getCustomerId().equals(existingBeerOrder.getCustomer().getId())) {
             throw new NotFoundException("Found order has different customer id which is illegal");
         }
+        existingBeerOrder.setCustomerRef(updateBeerOrder.getCustomerRef());
+        existingBeerOrder.setPaymentAmount(updateBeerOrder.getPaymentAmount());
 
         Iterator<BeerOrderLineUpdateDTO> lineIter = updateBeerOrder.getBeerOrderLines().iterator();
         while(lineIter.hasNext()) {
@@ -153,8 +158,14 @@ public class BeerOrderServiceJPA implements BeerOrderService {
         }
         // now the updated beerOrder is ready to be saved
         BeerOrder updatedSavedBeerOrder = beerOrderRepository.save(existingBeerOrder);
+        BeerOrderDTO updatedBeerOrderDto = beerOrderMapper.beerOrderToBeerOrderDto(updatedSavedBeerOrder);
 
-        return beerOrderMapper.beerOrderToBeerOrderDto(updatedSavedBeerOrder);
+        if(updateBeerOrder.getPaymentAmount() != null) {
+            applicationEventPublisher.publishEvent(OrderPlacedEvent.builder()
+                .beerOrderDTO(updatedBeerOrderDto).build());
+        }
+
+        return updatedBeerOrderDto;
     }
 
     @Override

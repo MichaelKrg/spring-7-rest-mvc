@@ -5,9 +5,9 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 
-import guru.springframework.spring7restmvc.model.BeerOrderCreateDTO;
-import guru.springframework.spring7restmvc.model.BeerOrderDTO;
-import guru.springframework.spring7restmvc.model.BeerOrderUpdateDTO;
+import guru.springframework.spring6restmvcapi.model.BeerOrderCreateDTO;
+import guru.springframework.spring6restmvcapi.model.BeerOrderDTO;
+import guru.springframework.spring6restmvcapi.model.BeerOrderUpdateDTO;
 
 public interface BeerOrderService {
     Page<BeerOrderDTO> listBeerOrders(Integer pageNumber, Integer pageSize);
